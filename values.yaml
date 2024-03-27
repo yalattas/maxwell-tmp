@@ -1,0 +1,85 @@
+resources:
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: maxwell
+    spec:
+      selector:
+        app: maxwell
+      ports:
+        - protocol: TCP
+          port: 8080
+          targetPort: 8080
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: maxwell
+    spec:
+      serviceName: maxwell
+      replicas: 1
+      selector:
+        matchLabels:
+          app: maxwell
+      template:
+        metadata:
+          labels:
+            app: maxwell
+        spec:
+          containers:
+          - name: maxwell
+            image: zendesk/maxwell:v1.41.0
+            imagePullPolicy: IfNotPresent
+            command:
+            - bin/maxwell
+            args:
+            - "--env_config_prefix=MW_"
+            volumeMounts:
+            - name: config-volume
+              mountPath: /usr/local/etc/maxwell
+            envFrom:
+            - configMapRef:
+                name: maxwell-env
+            ports:
+              - name: maxwell
+                containerPort: 8080
+                protocol: TCP
+            livenessProbe:
+              httpGet:
+                path: /diagnostic
+                port: 8080
+              initialDelaySeconds: 60
+              periodSeconds: 2
+          volumes:
+          - name: config-volume
+            configMap:
+              name: maxwell-configmap
+              items:
+                - key: sample.sh
+                  path: sample.sh
+      volumeClaimTemplates: []
+  - apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: maxwell-configmap
+    data:
+      sample.sh: |
+          ls
+  - apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: maxwell-env
+    data:
+      MW_HOST: 192.168.122.1
+      MW_USER: root
+      MW_PASSWORD: "123"
+      MW_LOG_LEVEL: debug
+      MW_PRODUCER: stdout
+  - apiVersion: policy/v1
+    kind: PodDisruptionBudget
+    metadata:
+      name: maxwell
+    spec:
+      minAvailable: 1
+      selector:
+        matchLabels:
+          app: maxwell

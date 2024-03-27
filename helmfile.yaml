@@ -1,0 +1,14 @@
+helmDefaults:
+  atomic: true
+  verify: false
+  wait: true
+  timeout: 1200
+  force: false
+  createNamespace: true
+releases:
+  - name: maxwell
+    namespace: maxwell
+    chart: ./raw
+    version: v0.2.5
+    values:
+      - "./values.yaml"
