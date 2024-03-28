@@ -33,6 +33,7 @@ resources:
             - bin/maxwell
             args:
             - "--env_config_prefix=MW_"
+            - "--config=/usr/local/etc/maxwell/config.properties"
             volumeMounts:
             - name: config-volume
               mountPath: /usr/local/etc/maxwell
@@ -47,23 +48,26 @@ resources:
               httpGet:
                 path: /diagnostic
                 port: 8080
-              initialDelaySeconds: 60
+              initialDelaySeconds: 20
               periodSeconds: 2
           volumes:
           - name: config-volume
             configMap:
               name: maxwell-configmap
               items:
-                - key: sample.sh
-                  path: sample.sh
+                - key: config.properties
+                  path: config.properties
       volumeClaimTemplates: []
   - apiVersion: v1
     kind: ConfigMap
     metadata:
       name: maxwell-configmap
     data:
-      sample.sh: |
-          ls
+      config.properties: |
+          metrics_type=http
+          metrics_jvm=true
+          http_port=8080
+          http_diagnostic=true
   - apiVersion: v1
     kind: ConfigMap
     metadata:
@@ -72,7 +76,7 @@ resources:
       MW_HOST: 192.168.122.1
       MW_USER: root
       MW_PASSWORD: "123"
-      MW_LOG_LEVEL: debug
+      MW_LOG_LEVEL: info
       MW_PRODUCER: stdout
   - apiVersion: policy/v1
     kind: PodDisruptionBudget
