@@ -34,6 +34,13 @@ resources:
             args:
             - "--env_config_prefix=MW_"
             - "--config=/usr/local/etc/maxwell/config.properties"
+            # - "--ha"
+            # - "--raft_member_id=$(POD_NAME)"
+            # env:
+            # - name: POD_NAME
+            #   valueFrom:
+            #     fieldRef:
+            #       fieldPath: metadata.name
             volumeMounts:
             - name: config-volume
               mountPath: /usr/local/etc/maxwell
@@ -57,6 +64,8 @@ resources:
               items:
                 - key: config.properties
                   path: config.properties
+                # - key: maxwell.raft.xml
+                #   path: raft.xml
       volumeClaimTemplates: []
   - apiVersion: v1
     kind: ConfigMap
@@ -68,6 +77,35 @@ resources:
           metrics_jvm=true
           http_port=8080
           http_diagnostic=true
+          binlog_heartbeat=true
+          http_config=true
+          jgroups_config=/usr/local/etc/maxwell/raft.xml
+      # maxwell.raft.xml: |
+      #   <?xml version='1.0' encoding='utf-8'?>
+      #   <config xmlns="urn:org:jgroups"
+      #           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      #           xsi:schemaLocation="urn:org:jgroups http://www.jgroups.org/schema/jgroups.xsd">
+      #       <TCP  bind_port="8080" />
+      #       <TCPPING async_discovery="true"
+      #         initial_hosts="maxwell-1.maxwell,maxwell-2.maxwell,maxwell-3.maxwell"
+      #         port_range="3"/>
+      #       <PING />
+      #       <MERGE3 />
+      #       <FD_SOCK/>
+      #       <FD_ALL/>
+      #       <VERIFY_SUSPECT timeout="1500"/>
+      #       <pbcast.NAKACK2 xmit_interval="500" use_mcast_xmit="false"/>
+      #       <UNICAST3 xmit_interval="500"/>
+      #       <pbcast.STABLE desired_avg_gossip="50000" max_bytes="4M"/>
+      #       <raft.NO_DUPES/>
+      #       <pbcast.GMS print_local_addr="true" join_timeout="2000"/>
+      #       <UFC max_credits="2M" min_threshold="0.4"/>
+      #       <MFC max_credits="2M" min_threshold="0.4"/>
+      #       <FRAG2 frag_size="60K"/>
+      #       <raft.ELECTION election_min_interval="500" election_max_interval="1000" heartbeat_interval="250"/>
+      #       <raft.RAFT members="maxwell-0,maxwell-1,maxwell-2" raft_id="${raft_id:undefined}"/>
+      #       <raft.REDIRECT/>
+      #   </config>
   - apiVersion: v1
     kind: ConfigMap
     metadata:
