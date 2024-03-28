@@ -87,7 +87,7 @@ resources:
       #           xsi:schemaLocation="urn:org:jgroups http://www.jgroups.org/schema/jgroups.xsd">
       #       <TCP  bind_port="8080" />
       #       <TCPPING async_discovery="true"
-      #         initial_hosts="maxwell-1.maxwell,maxwell-2.maxwell,maxwell-3.maxwell"
+      #         initial_hosts="${jgroups.tcpping.initial_hosts}maxwell-1.maxwell,maxwell-2.maxwell,maxwell-3.maxwell"
       #         port_range="3"/>
       #       <PING />
       #       <MERGE3 />
